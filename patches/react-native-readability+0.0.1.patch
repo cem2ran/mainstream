@@ -1,0 +1,28 @@
+diff --git a/node_modules/react-native-readability/util/clean-html.js b/node_modules/react-native-readability/util/clean-html.js
+index b0da501..6d00d9a 100644
+--- a/node_modules/react-native-readability/util/clean-html.js
++++ b/node_modules/react-native-readability/util/clean-html.js
+@@ -1,5 +1,5 @@
+-const Readability = require("readability-node").Readability;
+-const JSDOMParser = require("readability-node").JSDOMParser;
++const Readability = require("@mozilla/readability").Readability;
++const JSDOMParser = require("@mozilla/readability/JSDOMParser");
+ const DOMParser = require("xmldom-silent").DOMParser;
+ const XMLSerializer = require("xmldom-silent").XMLSerializer;
+ const UrlParser = require("url-parse");
+@@ -93,12 +93,10 @@ export default function(html, sourceUrl) {
+     let cleanedHtml;
+ 
+     try {
+-      const readability = new Readability(readabilityUrl, document);
+-      if (readability) {
+-        cleanedHtml = readability.parse();
+-      }
++      cleanedHtml = new Readability(document).parse();
++
+     } catch (error) {
+-      throw new Error("Unable to clean HTML");
++      throw new Error(error);
+     }
+ 
+     resolve(cleanedHtml);

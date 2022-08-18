@@ -1,0 +1,47 @@
+{
+  "common": {
+    "action_cancel": "Cancel",
+    "action_accept": "Yes"
+  },
+  "feature_flags": {
+    "save": {
+      "_title": "Save",
+      "swipe_to_save": "Swipe to save",
+      "hold_to_save": "Hold to save",
+      "press_icon_to_save": "Press icon to save",
+      "hide_saved_items": "Hide saved items",
+      "show_saved_icon": "Show saved icon"
+    },
+    "reader": {
+      "_title": "Reader",
+      "progress_bar": "Show progress bar"
+    }
+  },
+  "settings": {
+    "title": "Settings"
+  },
+  "not_found": {
+    "text": "This screen doesn't exist.",
+    "action": "Go to home screen!"
+  },
+  "news": {
+    "title": "New",
+    "modal": {
+      "title": "Modal"
+    }
+  },
+  "read": {
+    "title": "Archive",
+    "clear": {
+      "title": "Clear Archive",
+      "description": "Are you sure you want to clear the archive?"
+    }
+  },
+  "saved": {
+    "title": "Reading List",
+    "clear": {
+      "title": "Clear Reading List",
+      "description": "Are you sure you want to clear the list?"
+    }
+  }
+}

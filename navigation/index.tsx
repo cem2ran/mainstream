@@ -3,19 +3,25 @@
  * https://reactnavigation.org/docs/getting-started
  *
  */
-import { FontAwesome } from '@expo/vector-icons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { ColorSchemeName, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Alert, ColorSchemeName } from 'react-native';
 
-import Colors from '../constants/Colors';
-import useColorScheme from '../hooks/useColorScheme';
+import IconButton from '../components/IconButton';
+import useColors from '../hooks/useColors';
+import useReadArticles from '../hooks/useReadArticles';
+import useSavedArticles from '../hooks/useSavedArticles';
+import ArchiveScreen from '../screens/ArchiveScreen';
+import ArticleScreen from '../screens/ArticleScreen';
 import ModalScreen from '../screens/ModalScreen';
+import NewsFeedScreen from '../screens/NewsFeedScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
-import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
+import ReadingListScreen from '../screens/ReadingListScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 
@@ -38,7 +44,17 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function RootNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
+      <Stack.Screen name="Root" component={TabNavigator} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Article"
+        component={ArticleScreen}
+        options={() => {
+          return {
+            title: '', //article.title,
+            headerBackTitleVisible: false,
+          };
+        }}
+      />
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
         <Stack.Screen name="Modal" component={ModalScreen} />
@@ -53,43 +69,123 @@ function RootNavigator() {
  */
 const BottomTab = createBottomTabNavigator<RootTabParamList>();
 
-function BottomTabNavigator() {
-  const colorScheme = useColorScheme();
+function TabNavigator() {
+  const colors = useColors();
+  const savedArticles = useSavedArticles();
+  const readArticles = useReadArticles();
+  const { t } = useTranslation();
+  const disableSavedListResetButton = savedArticles.articles.length === 0;
+  const disableReadListResetButton = readArticles.articles.length === 0;
 
   return (
     <BottomTab.Navigator
-      initialRouteName="TabOne"
+      initialRouteName="NewsFeed"
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
+        tabBarActiveTintColor: colors.tint,
+        tabBarShowLabel: false,
       }}>
       <BottomTab.Screen
-        name="TabOne"
-        component={TabOneScreen}
-        options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('Modal')}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
-              })}>
-              <FontAwesome
-                name="info-circle"
-                size={25}
-                color={Colors[colorScheme].text}
-                style={{ marginRight: 15 }}
-              />
-            </Pressable>
-          ),
+        name="NewsFeed"
+        component={NewsFeedScreen}
+        options={({ navigation }: RootTabScreenProps<'NewsFeed'>) => ({
+          title: t('news:title'),
+          tabBarIcon: ({ color }) => <TabBarIcon name="ios-newspaper-outline" color={color} />,
+          // headerRight: () => (
+          //   <HoldItem
+          //     activateOn="hold"
+          //     containerStyles={{ right: 14 }}
+          //     items={[
+          //       { text: 'Action', isTitle: true, onPress: () => {} },
+          //       {
+          //         text: 'Home',
+          //         icon: () => <Icon name="home" size={18} />,
+          //         onPress: () => {},
+          //       },
+          //       {
+          //         text: 'Edit',
+          //         icon: () => <Icon name="expand-outline" size={18} />,
+          //         onPress: () => {},
+          //       },
+          //       {
+          //         text: 'Delete',
+          //         icon: () => <Icon name="remove" size={18} />,
+          //         withSeparator: true,
+          //         isDestructive: true,
+          //         onPress: () => {},
+          //       },
+          //       {
+          //         text: 'Share',
+          //         icon: () => <Icon name="share" size={18} />,
+          //         onPress: () => {},
+          //       },
+          //       {
+          //         text: 'More',
+          //         icon: () => <Icon name="expand-outline" size={18} />,
+          //         onPress: () => {},
+          //       },
+          //     ]}>
+          //     <IconButton name="cog-outline" onPress={() => navigation.navigate('Modal')} />
+          //   </HoldItem>
+          // ),
         })}
       />
       <BottomTab.Screen
-        name="TabTwo"
-        component={TabTwoScreen}
+        name="Saved"
+        component={ReadingListScreen}
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: t('saved:title'),
+
+          tabBarIcon: ({ color }) => <TabBarIcon name="bookmarks-outline" color={color} />,
+          headerRight: () => (
+            <IconButton
+              disabled={disableSavedListResetButton}
+              style={{ marginRight: 14 }}
+              name="trash-bin"
+              onPress={() => {
+                Alert.alert(t('saved:clear.title'), t('saved:clear.description'), [
+                  {
+                    text: t('common:action_cancel'),
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  { text: t('common:action_accept'), onPress: () => savedArticles.reset() },
+                ]);
+              }}
+            />
+          ),
+        }}
+      />
+      <BottomTab.Screen
+        name="Archive"
+        component={ArchiveScreen}
+        options={{
+          title: t('read:title'),
+          tabBarIcon: ({ color }) => <TabBarIcon name="archive-outline" color={color} />,
+          headerRight: () => (
+            <IconButton
+              disabled={disableReadListResetButton}
+              style={{ marginRight: 14 }}
+              name="trash-bin"
+              onPress={() => {
+                Alert.alert(t('read:clear.title'), t('read:clear.description'), [
+                  {
+                    text: t('common:action_cancel'),
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  { text: t('common:action_accept'), onPress: () => readArticles.reset() },
+                ]);
+              }}
+            />
+          ),
+        }}
+      />
+      <BottomTab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: t('settings:title'),
+          tabBarIcon: ({ color }) => <TabBarIcon name="cog-outline" color={color} />,
         }}
       />
     </BottomTab.Navigator>
@@ -99,9 +195,6 @@ function BottomTabNavigator() {
 /**
  * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
  */
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
+function TabBarIcon(props: { name: React.ComponentProps<typeof Icon>['name']; color: string }) {
+  return <Icon size={26} style={{ marginBottom: -3 }} {...props} />;
 }

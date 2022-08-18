@@ -1,0 +1,12 @@
+{
+  "save": {
+    "swipe_to_save": false,
+    "hold_to_save": false,
+    "press_icon_to_save": true,
+    "hide_saved_items": false,
+    "show_saved_icon": false
+  },
+  "reader": {
+    "progress_bar": true
+  }
+}

@@ -1,0 +1,183 @@
+diff --git a/node_modules/react-native-clean-webview/src/index.js b/node_modules/react-native-clean-webview/src/index.js
+index 1681f5b..bf1d592 100644
+--- a/node_modules/react-native-clean-webview/src/index.js
++++ b/node_modules/react-native-clean-webview/src/index.js
+@@ -1,97 +1,97 @@
+-import React, { Component } from 'react';
++import React, { useEffect, useState } from 'react';
+ import PropTypes from 'prop-types';
+ import {
+   StyleSheet,
+   View,
+-  WebView
+ } from 'react-native';
++import { WebView } from 'react-native-webview';
+ import readabilityJs from './readability';
+ import cleanHtmlTemplate from './cleanHtmlTemplate';
+ import cleanHtmlCss from './cleanHtmlCss';
+ import scriptRemover from 'script_sanitize';
+ 
+-export default class CleanWebView extends Component {
+-  constructor(props) {
+-    super(props);
+-
+-    this.state = {
++const CleanWebView = React.forwardRef(({url, onError, htmlCss, onCleaned, render, ...props}, ref) => {
++  const [state, setState] = useState({
+       fullHtmlSource: undefined,
+       cleanHtmlSource: undefined
+-    };
++    });
+ 
+-    fetch(this.props.url)
+-      .then((webResponse) => webResponse.text())
+-      .then((webResponseText) => {
+-        let withoutScripts = scriptRemover.sanitize(webResponseText);
+-        let readHtml = withoutScripts.replace("</body>", readabilityJs(this.props.url) + "</body>");
+-        return readHtml;
+-      })
+-      .then((readabilityHtml) => {
+-        this.setState({
+-          fullHtmlSource: readabilityHtml,
+-          cleanHtmlSource: undefined
+-        });
+-      })
+-      .catch((error) => {
+-        if (this.props.onError) {
+-          this.props.onError(error);
+-        }
++  useEffect(() => {
++    fetch(url)
++    .then((webResponse) => webResponse.text())
++    .then((webResponseText) => {
++      let withoutScripts = scriptRemover.sanitize(webResponseText);
++      let readHtml = withoutScripts.replace("</body>", readabilityJs(url) + "</body>");
++      return readHtml;
++    })
++    .then((readabilityHtml) => {
++      setState({
++        fullHtmlSource: readabilityHtml,
++        cleanHtmlSource: undefined
+       });
+-  }
++    })
++    .catch((error) => {
++      if (onError) {
++        onError(error);
++      }
++    });
++  }, [url])
+ 
+-  render() {
+-    return (
+-       <View style={ styles.scene } >
+-        { this.state.fullHtmlSource &&
+-        <WebView
+-          style={ styles.hiddenWebView }
+-          source={ {html: this.state.fullHtmlSource} }
+-          onMessage={ (event) => {
+-            if (!event.nativeEvent.data) {
+-              if (this.props.onError) {
+-                this.props.onError(new Error('Could not clean HTML'));
+-              }
+-              return;
++  return (
++      <View style={ styles.scene } >
++      { state.fullHtmlSource &&
++      <WebView
++        style={ styles.hiddenWebView }
++        source={ {html: state.fullHtmlSource} }
++        onNavigationStateChange={props.onNavigationStateChange}
++        onMessage={ (event) => {
++          if (!event.nativeEvent.data) {
++            if (onError) {
++              onError(new Error('Could not clean HTML'));
+             }
++            return;
++          }
+ 
+-            let readabilityArticle = JSON.parse(event.nativeEvent.data);
+-            let cleanHtml = '';
++          let readabilityArticle = JSON.parse(event.nativeEvent.data);
++          if (!readabilityArticle) {
++            onError(new Error('Could not clean HTML'));
++            return;
++          }
++          let cleanHtml = cleanHtmlTemplate(htmlCss || cleanHtmlCss, readabilityArticle.title, readabilityArticle.content);
+ 
+-            if (this.props.htmlCss) {
+-              cleanHtml = cleanHtmlTemplate(this.props.htmlCss, readabilityArticle.title, readabilityArticle.content);
+-            } else {
+-              cleanHtml = cleanHtmlTemplate(cleanHtmlCss, readabilityArticle.title, readabilityArticle.content);
+-            }
++          if (onCleaned) {
++            onCleaned(readabilityArticle, cleanHtml);
++          }
+ 
+-            if (this.props.onCleaned) {
+-              this.props.onCleaned(readabilityArticle, cleanHtml);
+-            }
++          setState({
++            fullHtmlSource: undefined,
++            cleanHtmlSource: cleanHtml
++          });
++        } }
+ 
+-            this.setState({
+-              fullHtmlSource: undefined,
+-              cleanHtmlSource: cleanHtml
+-            });
+-          } }
+-          />
+-        }
+-        { this.state.cleanHtmlSource &&
+-        <WebView
+-          style={ styles.webView }
+-          source={ {html: this.state.cleanHtmlSource, baseUrl: this.props.url} }
+-          />
+-        }
+-      </View> 
+-    );
+-  }
+-}
++        />
++      }
++      { state.cleanHtmlSource &&
++      render ? render(state.cleanHtmlSource) : <WebView ref={ref}
++        style={ styles.webView }
++        source={ {html: state.cleanHtmlSource, baseUrl: url} }
++        {...props}
++        />
++      }
++    </View> 
++  );
++});
+ 
+ CleanWebView.propTypes = {
+   url: PropTypes.string.isRequired,
+   htmlCss: PropTypes.string,
++  render: PropTypes.func,
+   onCleaned: PropTypes.func,
+   onError: PropTypes.func
+ }
+ 
++export default CleanWebView;
++
+ const styles = StyleSheet.create({
+   scene: {
+     flex: 1,
+diff --git a/node_modules/react-native-clean-webview/src/readability.js b/node_modules/react-native-clean-webview/src/readability.js
+index bf93208..d92a07b 100644
+--- a/node_modules/react-native-clean-webview/src/readability.js
++++ b/node_modules/react-native-clean-webview/src/readability.js
+@@ -1778,8 +1778,8 @@ setTimeout(function() {
+   };
+ 
+   var article = new Readability(uri, document).parse();
+-  window.postMessage(JSON.stringify(article), '*');
+-}, 1000);
++  window.ReactNativeWebView.postMessage(JSON.stringify(article), '*');
++}, 1);
+ 
+ </script>
+ `;

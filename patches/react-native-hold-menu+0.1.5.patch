@@ -1,0 +1,71 @@
+diff --git a/node_modules/react-native-hold-menu/src/components/backdrop/Backdrop.tsx b/node_modules/react-native-hold-menu/src/components/backdrop/Backdrop.tsx
+index dc5fa35..2e632b7 100644
+--- a/node_modules/react-native-hold-menu/src/components/backdrop/Backdrop.tsx
++++ b/node_modules/react-native-hold-menu/src/components/backdrop/Backdrop.tsx
+@@ -40,7 +40,11 @@ type Context = {
+   };
+ };
+ 
+-const BackdropComponent = () => {
++const BackdropComponent = ({
++  blur,
++}: {
++  blur: boolean;
++}) => {
+   const { state, theme } = useInternal();
+ 
+   const tapGestureEvent = useAnimatedGestureHandler<
+@@ -94,12 +98,12 @@ const BackdropComponent = () => {
+ 
+   const animatedContainerProps = useAnimatedProps(() => {
+     return {
+-      intensity: withTiming(
++      intensity: blur ? withTiming(
+         state.value === CONTEXT_MENU_STATE.ACTIVE ? 100 : 0,
+         {
+           duration: HOLD_ITEM_TRANSFORM_DURATION,
+         }
+-      ),
++      ): 0,
+     };
+   });
+ 
+diff --git a/node_modules/react-native-hold-menu/src/components/provider/Provider.tsx b/node_modules/react-native-hold-menu/src/components/provider/Provider.tsx
+index 5b14f6f..c6772bb 100644
+--- a/node_modules/react-native-hold-menu/src/components/provider/Provider.tsx
++++ b/node_modules/react-native-hold-menu/src/components/provider/Provider.tsx
+@@ -26,6 +26,7 @@ const ProviderComponent = ({
+   theme: selectedTheme,
+   iconComponent,
+   paddingBottom,
++  blur = true
+ }: HoldMenuProviderProps) => {
+   if (iconComponent)
+     AnimatedIcon = Animated.createAnimatedComponent(iconComponent);
+@@ -66,7 +67,7 @@ const ProviderComponent = ({
+       <InternalContext.Provider value={internalContextVariables}>
+         <PortalProvider>
+           {children}
+-          <Backdrop />
++          <Backdrop blur={blur} />
+           <Menu />
+         </PortalProvider>
+       </InternalContext.Provider>
+diff --git a/node_modules/react-native-hold-menu/src/components/provider/types.d.ts b/node_modules/react-native-hold-menu/src/components/provider/types.d.ts
+index 20123c9..32d736a 100644
+--- a/node_modules/react-native-hold-menu/src/components/provider/types.d.ts
++++ b/node_modules/react-native-hold-menu/src/components/provider/types.d.ts
+@@ -18,4 +18,13 @@ export interface HoldMenuProviderProps {
+    * paddingBottom={34}
+    */
+   paddingBottom?: number;
++  
++  /**
++   * Set to `false` if you'd like to disable the blur
++   * @type boolean
++   * @default true
++   * @examples
++   * blur={false}
++   */
++  blur?: boolean;
+ }

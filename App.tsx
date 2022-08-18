@@ -1,6 +1,6 @@
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import './polyfills';
 
+import Providers from './config/Providers';
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
 import Navigation from './navigation';
@@ -13,10 +13,9 @@ export default function App() {
     return null;
   } else {
     return (
-      <SafeAreaProvider>
+      <Providers>
         <Navigation colorScheme={colorScheme} />
-        <StatusBar />
-      </SafeAreaProvider>
+      </Providers>
     );
   }
 }
